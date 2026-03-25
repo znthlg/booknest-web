@@ -4,18 +4,16 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 
-export default function Home() {
+export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
   useEffect(() => {
     if (loading) return;
-    router.replace(user ? "/dashboard" : "/login");
+    if (!user) router.replace("/login");
+    else router.replace("/dashboard/library");
   }, [loading, router, user]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-sm text-foreground/70">Loading...</div>
-    </div>
-  );
+  return null;
 }
+
