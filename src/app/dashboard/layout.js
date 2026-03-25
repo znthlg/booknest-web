@@ -95,9 +95,17 @@ export default function DashboardLayout({ children }) {
     router.replace("/login");
   };
 
+  const pageTitle = pathname
+    .replace("/dashboard/", "")
+    .replace("-", " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+
+  const isShelf =
+    pathname === "/dashboard/shelf" || pathname.startsWith("/dashboard/shelf/");
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-[240px] shrink-0 flex-col border-r border-white/10 bg-white/5 px-3 py-4">
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-white/10 bg-white/5 px-3 py-4 md:flex">
         <div className="px-1">
           <div className="text-xs tracking-widest text-foreground/70">BOOKNEST</div>
           <div className="mt-1 text-lg font-semibold tracking-tight">Your library</div>
@@ -113,7 +121,7 @@ export default function DashboardLayout({ children }) {
                 className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
                   active
                     ? "border border-indigo-500/30 bg-indigo-500/15 text-indigo-200"
-                    : "border border-transparent text-foreground/80 hover:bg-white/5 hover:border-white/10"
+                    : "border border-transparent text-foreground/80 hover:border-white/10 hover:bg-white/5"
                 }`}
               >
                 <span className={active ? "text-indigo-300" : "text-foreground/70"}>
@@ -132,7 +140,7 @@ export default function DashboardLayout({ children }) {
             <button
               type="button"
               onClick={onLogout}
-              className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground/85 hover:bg-white/10 hover:border-white/15 transition"
+              className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground/85 transition hover:border-white/15 hover:bg-white/10"
             >
               Logout
             </button>
@@ -140,24 +148,34 @@ export default function DashboardLayout({ children }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8">
+      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[var(--background)]/95 px-4 backdrop-blur-md md:hidden">
+        <Link
+          href="/dashboard/shelf"
+          className="min-w-0 text-sm font-semibold tracking-tight text-foreground/95"
+        >
+          BookNest
+        </Link>
+        <Link
+          href="/dashboard/books/new"
+          className="shrink-0 rounded-xl bg-indigo-500 px-3 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-400"
+        >
+          Add book
+        </Link>
+      </header>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+        <section className="mx-auto w-full max-w-6xl flex-1 px-3 py-4 sm:px-6 md:px-8 md:py-6">
           <div
-            className={`flex items-center gap-4 ${
-              pathname === "/dashboard/shelf" || pathname.startsWith("/dashboard/shelf/")
-                ? "justify-end"
-                : "justify-between"
+            className={`flex flex-wrap items-start gap-3 sm:items-center sm:gap-4 ${
+              isShelf ? "justify-end" : "justify-between"
             }`}
           >
-            {pathname === "/dashboard/shelf" || pathname.startsWith("/dashboard/shelf/") ? null : (
-              <div>
-                <div className="text-base font-semibold tracking-tight">
-                  {pathname
-                    .replace("/dashboard/", "")
-                    .replace("-", " ")
-                    .replace(/\b\w/g, (m) => m.toUpperCase())}
+            {isShelf ? null : (
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold tracking-tight sm:text-base">
+                  {pageTitle}
                 </div>
-                <div className="mt-1 text-sm text-foreground/60">
+                <div className="mt-0.5 hidden text-sm text-foreground/60 sm:block">
                   Organized by your categories, locations, and reading status.
                 </div>
               </div>
@@ -165,15 +183,42 @@ export default function DashboardLayout({ children }) {
 
             <Link
               href="/dashboard/books/new"
-              className="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-400"
+              className="hidden shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-400 md:inline-flex"
             >
               Add Book
             </Link>
           </div>
 
-          <div className="mt-6">{children}</div>
+          <div className="mt-4 md:mt-6">{children}</div>
         </section>
       </div>
+
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-white/10 bg-[var(--background)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        aria-label="Main navigation"
+      >
+        <div className="mx-auto flex w-full max-w-lg items-stretch justify-between gap-0 px-1 pt-1">
+          {tabs.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-t-xl px-1 py-1.5 text-[10px] font-medium tabular-nums transition ${
+                  active
+                    ? "bg-indigo-500/12 text-indigo-200"
+                    : "text-foreground/70 active:bg-white/5"
+                }`}
+              >
+                <span className={active ? "text-indigo-300" : "text-foreground/70"}>
+                  <Icon name={item.key} />
+                </span>
+                <span className="max-w-full truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

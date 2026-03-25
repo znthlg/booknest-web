@@ -17,7 +17,7 @@ export default function BulkBooksToolbar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-4 pt-2 sm:px-8">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-[100] flex justify-center px-3 pb-4 pt-2 sm:px-8 md:bottom-0">
       <div
         className="pointer-events-auto flex max-w-3xl flex-col gap-2 rounded-2xl border border-white/15 bg-[var(--background)]/95 px-3 py-3 shadow-xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4"
         style={{ boxShadow: "0 -4px 24px rgba(0,0,0,0.35)" }}

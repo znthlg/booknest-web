@@ -205,7 +205,7 @@ export default function BookCard({
 
   return (
     <div
-      className={`group relative rounded-3xl border bg-white/5 p-5 shadow-sm backdrop-blur transition hover:border-white/15 hover:bg-white/8 ${
+      className={`group relative rounded-2xl border bg-white/5 p-3 shadow-sm backdrop-blur transition hover:border-white/15 hover:bg-white/8 sm:rounded-3xl sm:p-5 ${
         bulkMode
           ? `${gridClickable ? "cursor-pointer " : ""}${bulkSelected ? "border-indigo-400/40 ring-1 ring-indigo-400/25" : "border-white/10"}`
           : gridClickable
@@ -216,7 +216,7 @@ export default function BookCard({
     >
       {bulkMode ? (
         <div
-          className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold shadow-md ${
+          className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold shadow-md sm:right-3 sm:top-3 sm:h-8 sm:w-8 sm:text-sm ${
             bulkSelected
               ? "border-indigo-400 bg-indigo-500/50 text-white"
               : "border-white/40 bg-black/35 text-transparent"
@@ -227,7 +227,7 @@ export default function BookCard({
         </div>
       ) : null}
       {cover ? (
-        <div className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+        <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-white/5 sm:mb-4 sm:rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={cover}
@@ -238,11 +238,11 @@ export default function BookCard({
         </div>
       ) : (
         <div
-          className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-400/20 to-fuchsia-400/10"
+          className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-indigo-400/20 to-fuchsia-400/10 sm:mb-4 sm:rounded-2xl"
           style={{ aspectRatio: "2 / 3" }}
         >
           <div className="flex h-full w-full items-center justify-center">
-            <div className="text-4xl font-semibold text-foreground/70">
+            <div className="text-2xl font-semibold text-foreground/70 sm:text-4xl">
               {(book.title || "B").trim().slice(0, 1).toUpperCase()}
             </div>
           </div>
@@ -252,11 +252,11 @@ export default function BookCard({
       <div>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-base font-semibold leading-6 text-foreground truncate">
-              {book.title || "Untitled"}
+            <div className="text-sm font-semibold leading-snug text-foreground sm:text-base sm:leading-6">
+              <span className="line-clamp-2">{book.title || "Untitled"}</span>
             </div>
             {authorText ? (
-              <div className="mt-2 line-clamp-2 text-[13px] font-medium leading-snug text-foreground/55">
+              <div className="mt-1 line-clamp-2 text-[11px] font-medium leading-snug text-foreground/55 sm:mt-2 sm:text-[13px]">
                 {authorText}
               </div>
             ) : null}
@@ -265,7 +265,7 @@ export default function BookCard({
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex flex-wrap items-center justify-end gap-1.5">
               <div
-                className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusAccent(
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${statusAccent(
                   normalizeReadingStatus(book.readingStatus)
                 )}`}
               >
