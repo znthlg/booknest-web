@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -69,9 +71,25 @@ export default function Login() {
   const isSignUp = mode === "signup";
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm backdrop-blur">
-      <div className="mb-2">
-        <div className="text-xs tracking-widest text-foreground/70">BOOKNEST</div>
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.55)] backdrop-blur">
+      <div className="mb-4 flex flex-col items-center gap-3 text-center">
+        <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1.5 shadow-sm">
+          <Image
+            src="/booknest-logo.png"
+            alt="BookNest logo"
+            width={56}
+            height={56}
+            className="h-14 w-14 rounded-xl object-cover"
+            priority
+          />
+        </div>
+        <div>
+          <div className="text-xs tracking-widest text-foreground/70">BOOKNEST</div>
+          <div className="mt-0.5 text-[11px] text-foreground/55">Personal library companion</div>
+        </div>
+      </div>
+
+      <div className="mb-2 text-center">
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">
           {isSignUp ? "Create account" : "Sign in"}
         </h1>
@@ -187,6 +205,15 @@ export default function Login() {
               : "Continue"}
         </button>
       </form>
+
+      <div className="mt-5 flex items-center justify-center gap-6 border-t border-white/10 pt-4 text-xs text-foreground/65">
+        <Link href="/privacy-policy" className="hover:text-foreground/85">
+          Privacy Policy
+        </Link>
+        <Link href="/support" className="hover:text-foreground/85">
+          Support
+        </Link>
+      </div>
     </div>
   );
 }
