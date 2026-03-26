@@ -49,6 +49,19 @@ function getCreatedAtMillis(createdAt) {
   return Number.isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
+function mapBookSearchResultToPrefill(item) {
+  return {
+    title: item?.title || "",
+    authors: Array.isArray(item?.authors) ? item.authors : [],
+    language: item?.language || "",
+    publisher: item?.publisher || "",
+    publicationYear: item?.publicationYear || "",
+    isbn: item?.isbn || "",
+    coverImageUrl: item?.coverImageUrl || "",
+    thumbnailURL: item?.coverImageUrl || "",
+  };
+}
+
 function LibraryPageContent() {
   const { user, loading } = useAuth();
   const searchParams = useSearchParams();
@@ -71,6 +84,10 @@ function LibraryPageContent() {
 
   const [viewMode, setViewMode] = useState("list");
   const [search, setSearch] = useState("");
+  const [onlineResults, setOnlineResults] = useState([]);
+  const [onlineLoading, setOnlineLoading] = useState(false);
+  const [onlineError, setOnlineError] = useState("");
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [categoryMainFilter, setCategoryMainFilter] = useState("all");
   const [categoryFormFilter, setCategoryFormFilter] = useState("all");
   const [categoryGenreFilter, setCategoryGenreFilter] = useState("all");
@@ -266,6 +283,54 @@ function LibraryPageContent() {
     readingStatus,
     search,
   ]);
+
+  const localTitleAuthorMatches = useMemo(() => {
+    const q = normalizeText(search).trim();
+    if (!q) return [];
+    return books.filter((b) => {
+      return (
+        normalizeText(b.title).includes(q) ||
+        normalizeText(normalizeList(b.authors).join(", ")).includes(q) ||
+        normalizeText(b.author).includes(q)
+      );
+    });
+  }, [books, search]);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) {
+      setOnlineResults([]);
+      setOnlineError("");
+      setOnlineLoading(false);
+      return;
+    }
+    if (localTitleAuthorMatches.length > 0) {
+      setOnlineResults([]);
+      setOnlineError("");
+      setOnlineLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setOnlineLoading(true);
+      setOnlineError("");
+      try {
+        const r = await fetch(`/api/book-search?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+        if (!r.ok) {
+          throw new Error(data?.error || "Online search failed.");
+        }
+        setOnlineResults(Array.isArray(data?.items) ? data.items : []);
+      } catch (err) {
+        setOnlineResults([]);
+        setOnlineError(err?.message || "Online search failed.");
+      } finally {
+        setOnlineLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [localTitleAuthorMatches.length, search]);
 
   const filteredIdSet = useMemo(() => new Set(filtered.map((b) => b.id)), [filtered]);
 
@@ -539,13 +604,68 @@ function LibraryPageContent() {
         <div className="flex flex-col gap-2 lg:w-1/2">
           <div className="text-sm font-medium text-foreground/85">Books</div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search title or author…"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                value={search}
+                onFocus={() => setShowSearchDropdown(true)}
+                onBlur={() => setTimeout(() => setShowSearchDropdown(false), 150)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
+                placeholder="Search title or author…"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
+              />
+              {showSearchDropdown &&
+              search.trim().length >= 2 &&
+              localTitleAuthorMatches.length === 0 ? (
+                <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-72 overflow-auto rounded-2xl border border-white/12 bg-[var(--background)]/95 p-2 shadow-xl backdrop-blur-md">
+                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+                    Online results
+                  </div>
+                  {onlineLoading ? (
+                    <div className="px-2 py-2 text-xs text-foreground/60">Searching online…</div>
+                  ) : onlineError ? (
+                    <div className="px-2 py-2 text-xs text-rose-200">{onlineError}</div>
+                  ) : onlineResults.length === 0 ? (
+                    <div className="px-2 py-2 text-xs text-foreground/60">
+                      No online matches found.
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {onlineResults.map((item, idx) => (
+                        <button
+                          key={`${item.sourceKey || item.title}-${idx}`}
+                          type="button"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            const prefill = mapBookSearchResultToPrefill(item);
+                            router.push(
+                              `/dashboard/books/new?prefill=${encodeURIComponent(
+                                JSON.stringify(prefill)
+                              )}`
+                            );
+                          }}
+                        >
+                          <div className="text-sm font-medium text-foreground/90">
+                            {item.title || "Untitled"}
+                          </div>
+                          <div className="mt-0.5 line-clamp-1 text-xs text-foreground/65">
+                            {(Array.isArray(item.authors) ? item.authors.join(", ") : "") ||
+                              "Author unknown"}
+                          </div>
+                          <div className="mt-1 text-[11px] text-foreground/50">
+                            {[item.publicationYear, item.source].filter(Boolean).join(" · ")}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import BookForm from "@/components/books/BookForm";
 import { createBook, listBooks } from "@/lib/booksApi";
@@ -13,6 +13,7 @@ import { getPlacementSettings } from "@/lib/placementSettingsApi";
 
 export default function AddBookPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
 
   const [categorySettings, setCategorySettings] = useState(null);
@@ -20,6 +21,29 @@ export default function AddBookPage() {
   const [existingBooks, setExistingBooks] = useState(/** @type {object[]} */ ([]));
   const [error, setError] = useState("");
   const [loadingData, setLoadingData] = useState(false);
+
+  const prefillBook = useMemo(() => {
+    const raw = searchParams?.get("prefill");
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      return {
+        title: parsed.title || "",
+        authors: Array.isArray(parsed.authors) ? parsed.authors : [],
+        language: parsed.language || "",
+        publisher: parsed.publisher || "",
+        publicationYear: parsed.publicationYear || "",
+        isbn: parsed.isbn || "",
+        coverImageUrl: parsed.coverImageUrl || "",
+        thumbnailURL: parsed.thumbnailURL || parsed.coverImageUrl || "",
+        notes: "",
+        readingStatus: "To Read",
+      };
+    } catch {
+      return null;
+    }
+  }, [searchParams]);
 
   const canSave = useMemo(() => {
     return (
@@ -103,7 +127,7 @@ export default function AddBookPage() {
         categorySettings={categorySettings}
         placementSettings={placementSettings}
         onSubmit={onSubmit}
-        initialBook={null}
+        initialBook={prefillBook}
       />
     </div>
   );
