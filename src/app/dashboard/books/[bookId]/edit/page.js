@@ -133,13 +133,13 @@ export default function EditBookPage({ params }) {
         </div>
       ) : null}
 
-      <div className="mb-5 flex justify-end gap-3">
+      <div className="mb-4 flex justify-end">
         <button
           type="button"
           onClick={onDelete}
-          className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/15 transition"
+          className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-200 transition hover:bg-rose-500/15"
         >
-          Delete Book
+          Delete
         </button>
       </div>
 

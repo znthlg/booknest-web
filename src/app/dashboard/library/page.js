@@ -13,7 +13,7 @@ import {
   applySearchParamsToLibraryState,
   buildBooksLibraryQuery,
 } from "@/lib/libraryQueryString";
-import { updateBook } from "@/lib/booksApi";
+import { deleteBook, updateBook } from "@/lib/booksApi";
 import { backfillCoversForBooks } from "@/lib/backfillBookCovers";
 import BookFormModal from "@/components/books/BookFormModal";
 import { ensureCategoryCatalogSeeded } from "@/lib/categoryCatalog/seedCategoryCatalog";
@@ -877,6 +877,15 @@ function LibraryPageContent() {
         onSave={async (payload) => {
           if (!user || !editBook?.id) return;
           await updateBook(user.uid, editBook.id, payload);
+          await load();
+        }}
+        onDelete={async () => {
+          if (!user || !editBook?.id) return;
+          const confirmed = window.confirm("Delete this book? This cannot be undone.");
+          if (!confirmed) return;
+          await deleteBook(user.uid, editBook.id);
+          setEditOpen(false);
+          setEditBook(null);
           await load();
         }}
       />

@@ -580,6 +580,12 @@ export default function BookForm({
     variant === "modal"
       ? "sticky bottom-0 z-10 -mx-4 mt-8 border-t border-white/10 bg-[var(--background)]/95 px-4 py-4 shadow-[0_-12px_32px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md sm:-mx-6 sm:px-6"
       : "sticky bottom-0 z-10 mt-10 border-t border-white/10 bg-[var(--background)]/95 py-5 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--background)]/88";
+  const submitWrapClass =
+    variant === "page" && isAddMode ? "flex justify-end" : "";
+  const submitBtnClass =
+    variant === "page" && isAddMode
+      ? "rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+      : "w-full rounded-2xl bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60";
 
   const duplicateYearTip = useMemo(() => {
     if (!duplicateModal?.matches?.length) return { show: false, text: "" };
@@ -1130,10 +1136,11 @@ export default function BookForm({
       </div>
 
       <div className={footerBleed}>
+        <div className={submitWrapClass}>
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-2xl bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className={submitBtnClass}
         >
           {submitting
             ? mode === "edit"
@@ -1143,6 +1150,7 @@ export default function BookForm({
               ? "Save changes"
               : "Add book"}
         </button>
+        </div>
       </div>
     </form>
 

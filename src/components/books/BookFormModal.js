@@ -12,6 +12,7 @@ export default function BookFormModal({
   userId = "",
   onClose,
   onSave,
+  onDelete,
 }) {
   const [actionError, setActionError] = useState("");
 
@@ -52,13 +53,24 @@ export default function BookFormModal({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground/85 hover:bg-white/10 hover:border-white/15 transition"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {mode === "edit" && typeof onDelete === "function" ? (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-200 transition hover:bg-rose-500/15"
+              >
+                Delete
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground/85 transition hover:border-white/15 hover:bg-white/10"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         {actionError ? (
