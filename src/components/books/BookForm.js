@@ -243,6 +243,14 @@ export default function BookForm({
   const [publisher, setPublisher] = useState(
     safeInitial.publisher != null ? String(safeInitial.publisher) : ""
   );
+  const [titleSearchResults, setTitleSearchResults] = useState([]);
+  const [authorSearchResults, setAuthorSearchResults] = useState([]);
+  const [titleSearchLoading, setTitleSearchLoading] = useState(false);
+  const [authorSearchLoading, setAuthorSearchLoading] = useState(false);
+  const [titleSearchError, setTitleSearchError] = useState("");
+  const [authorSearchError, setAuthorSearchError] = useState("");
+  const [showTitleDropdown, setShowTitleDropdown] = useState(false);
+  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
 
   const [isbnError, setIsbnError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -361,6 +369,90 @@ export default function BookForm({
     }
   };
 
+  const applyBookSearchSelection = (data) => {
+    if (!data || typeof data !== "object") return;
+    if (data.title) setTitle(String(data.title));
+    if (Array.isArray(data.authors) && data.authors.length) {
+      setAuthorsText(data.authors.join(", "));
+    }
+    if (data.language) setLanguage(String(data.language));
+    if (data.publisher) setPublisher(String(data.publisher));
+    if (data.publicationYear) setPublicationYear(String(data.publicationYear));
+    if (data.isbn) setIsbn(normalizeIsbnForStorage(data.isbn));
+    if (data.coverImageUrl) {
+      setCoverImageUrl(String(data.coverImageUrl));
+      setThumbnailURL(String(data.coverImageUrl));
+    }
+  };
+
+  useEffect(() => {
+    const q = title.trim();
+    if (!showTitleDropdown || q.length < 2) {
+      setTitleSearchResults([]);
+      setTitleSearchError("");
+      setTitleSearchLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setTitleSearchLoading(true);
+      setTitleSearchError("");
+      try {
+        const r = await fetch(
+          `/api/book-search?q=${encodeURIComponent(q)}&field=${encodeURIComponent("title")}`
+        );
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error || "Search failed.");
+        setTitleSearchResults(Array.isArray(data?.items) ? data.items : []);
+      } catch (err) {
+        setTitleSearchResults([]);
+        setTitleSearchError(err?.message || "Search failed.");
+      } finally {
+        setTitleSearchLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [showTitleDropdown, title]);
+
+  const authorQuery = useMemo(() => {
+    const parts = (authorsText || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return parts[parts.length - 1] || "";
+  }, [authorsText]);
+
+  useEffect(() => {
+    const q = authorQuery.trim();
+    if (!showAuthorDropdown || q.length < 2) {
+      setAuthorSearchResults([]);
+      setAuthorSearchError("");
+      setAuthorSearchLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setAuthorSearchLoading(true);
+      setAuthorSearchError("");
+      try {
+        const r = await fetch(
+          `/api/book-search?q=${encodeURIComponent(q)}&field=${encodeURIComponent("author")}`
+        );
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error || "Search failed.");
+        setAuthorSearchResults(Array.isArray(data?.items) ? data.items : []);
+      } catch (err) {
+        setAuthorSearchResults([]);
+        setAuthorSearchError(err?.message || "Search failed.");
+      } finally {
+        setAuthorSearchLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [authorQuery, showAuthorDropdown]);
+
   const submit = async (e) => {
     e.preventDefault();
     setIsbnError("");
@@ -418,15 +510,6 @@ export default function BookForm({
       setIsbnError("Title is required.");
       return;
     }
-    if (!isAddMode && (!selectedMain || !selectedForm)) {
-      setIsbnError("Please select category (main and form).");
-      return;
-    }
-    if (!physicalRoomId || !physicalBookshelfId || !physicalShelfId) {
-      setIsbnError("Please select room, bookshelf, and shelf (placement).");
-      return;
-    }
-
     const skipDupCheck = duplicateBypassRef.current;
     if (skipDupCheck) duplicateBypassRef.current = false;
 
@@ -572,26 +655,114 @@ export default function BookForm({
                 <label className="mb-1 block text-sm font-medium text-foreground/80">
                   Title
                 </label>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  type="text"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    value={title}
+                    onFocus={() => setShowTitleDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowTitleDropdown(false), 150)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      setShowTitleDropdown(true);
+                    }}
+                    type="text"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
+                    required
+                  />
+                  {showTitleDropdown && title.trim().length >= 2 ? (
+                    <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-64 overflow-auto rounded-2xl border border-white/12 bg-[var(--background)]/95 p-2 shadow-xl backdrop-blur-md">
+                      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+                        Book title search
+                      </div>
+                      {titleSearchLoading ? (
+                        <div className="px-2 py-2 text-xs text-foreground/60">Searching…</div>
+                      ) : titleSearchError ? (
+                        <div className="px-2 py-2 text-xs text-rose-200">{titleSearchError}</div>
+                      ) : titleSearchResults.length === 0 ? (
+                        <div className="px-2 py-2 text-xs text-foreground/60">No matches found.</div>
+                      ) : (
+                        <div className="space-y-1">
+                          {titleSearchResults.map((item, idx) => (
+                            <button
+                              key={`${item.sourceKey || item.title}-${idx}`}
+                              type="button"
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                applyBookSearchSelection(item);
+                                setShowTitleDropdown(false);
+                              }}
+                            >
+                              <div className="text-sm font-medium text-foreground/90">
+                                {item.title || "Untitled"}
+                              </div>
+                              <div className="mt-0.5 line-clamp-1 text-xs text-foreground/65">
+                                {(Array.isArray(item.authors) ? item.authors.join(", ") : "") ||
+                                  "Author unknown"}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">
                   Authors
                 </label>
-                <textarea
-                  value={authorsText}
-                  onChange={(e) => setAuthorsText(e.target.value)}
-                  rows={2}
-                  className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                  placeholder="Comma-separated (e.g. Neil Gaiman, Terry Pratchett)"
-                />
+                <div className="relative">
+                  <textarea
+                    value={authorsText}
+                    onFocus={() => setShowAuthorDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowAuthorDropdown(false), 150)}
+                    onChange={(e) => {
+                      setAuthorsText(e.target.value);
+                      setShowAuthorDropdown(true);
+                    }}
+                    rows={2}
+                    className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
+                    placeholder="Comma-separated (e.g. Neil Gaiman, Terry Pratchett)"
+                  />
+                  {showAuthorDropdown && authorQuery.trim().length >= 2 ? (
+                    <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-64 overflow-auto rounded-2xl border border-white/12 bg-[var(--background)]/95 p-2 shadow-xl backdrop-blur-md">
+                      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+                        Author search
+                      </div>
+                      {authorSearchLoading ? (
+                        <div className="px-2 py-2 text-xs text-foreground/60">Searching…</div>
+                      ) : authorSearchError ? (
+                        <div className="px-2 py-2 text-xs text-rose-200">{authorSearchError}</div>
+                      ) : authorSearchResults.length === 0 ? (
+                        <div className="px-2 py-2 text-xs text-foreground/60">No matches found.</div>
+                      ) : (
+                        <div className="space-y-1">
+                          {authorSearchResults.map((item, idx) => (
+                            <button
+                              key={`${item.sourceKey || item.title}-author-${idx}`}
+                              type="button"
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                applyBookSearchSelection(item);
+                                setShowAuthorDropdown(false);
+                              }}
+                            >
+                              <div className="text-sm font-medium text-foreground/90">
+                                {item.title || "Untitled"}
+                              </div>
+                              <div className="mt-0.5 line-clamp-1 text-xs text-foreground/65">
+                                {(Array.isArray(item.authors) ? item.authors.join(", ") : "") ||
+                                  "Author unknown"}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
                 <p className="mt-1 text-xs text-foreground/60">
                   {parseAuthorsToArray(authorsText).length} author(s)
                 </p>
@@ -637,15 +808,8 @@ export default function BookForm({
                         setCategoryGenreId("");
                       }}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                      required={!isAddMode}
                     >
-                      {isAddMode ? (
-                        <option value="">Uncategorized</option>
-                      ) : (
-                        <option value="" disabled>
-                          Main…
-                        </option>
-                      )}
+                      <option value="">Uncategorized</option>
                       {mains.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.name}
@@ -659,16 +823,9 @@ export default function BookForm({
                         setCategoryGenreId("");
                       }}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                      required={!isAddMode}
                       disabled={!categoryMainId}
                     >
-                      {isAddMode ? (
-                        <option value="">—</option>
-                      ) : (
-                        <option value="" disabled>
-                          Form…
-                        </option>
-                      )}
+                      <option value="">No form</option>
                       {forms.map((f) => (
                         <option key={f.id} value={f.id}>
                           {f.name}
@@ -710,10 +867,9 @@ export default function BookForm({
                         setPhysicalShelfId("");
                       }}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                      required
                     >
-                      <option value="" disabled>
-                        Room…
+                      <option value="">
+                        No room
                       </option>
                       {rooms.map((r) => (
                         <option key={r.id} value={r.id}>
@@ -728,11 +884,10 @@ export default function BookForm({
                         setPhysicalShelfId("");
                       }}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                      required
                       disabled={!physicalRoomId}
                     >
-                      <option value="" disabled>
-                        Bookshelf…
+                      <option value="">
+                        No bookshelf
                       </option>
                       {bookshelves.map((b) => (
                         <option key={b.id} value={b.id}>
@@ -744,11 +899,10 @@ export default function BookForm({
                       value={physicalShelfId}
                       onChange={(e) => setPhysicalShelfId(e.target.value)}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-indigo-400/50"
-                      required
                       disabled={!physicalBookshelfId}
                     >
-                      <option value="" disabled>
-                        Shelf…
+                      <option value="">
+                        No shelf
                       </option>
                       {shelfSlots.map((s) => (
                         <option key={s.id} value={s.id}>

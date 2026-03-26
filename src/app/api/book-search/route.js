@@ -95,10 +95,16 @@ function dedupe(items) {
   return out;
 }
 
-async function searchGoogle(query) {
+async function searchGoogle(query, field) {
+  const q =
+    field === "author"
+      ? `inauthor:${query}`
+      : field === "title"
+        ? `intitle:${query}`
+        : query;
   const url =
     "https://www.googleapis.com/books/v1/volumes?q=" +
-    encodeURIComponent(query) +
+    encodeURIComponent(q) +
     "&maxResults=8&printType=books";
   const r = await fetch(url, { method: "GET" });
   if (!r.ok) return [];
@@ -107,11 +113,14 @@ async function searchGoogle(query) {
   return items.map(mapGoogleItem).filter(Boolean);
 }
 
-async function searchOpenLibrary(query) {
-  const url =
-    "https://openlibrary.org/search.json?q=" +
-    encodeURIComponent(query) +
-    "&limit=8";
+async function searchOpenLibrary(query, field) {
+  const qs =
+    field === "author"
+      ? `author=${encodeURIComponent(query)}`
+      : field === "title"
+        ? `title=${encodeURIComponent(query)}`
+        : `q=${encodeURIComponent(query)}`;
+  const url = `https://openlibrary.org/search.json?${qs}&limit=8`;
   const r = await fetch(url, { method: "GET" });
   if (!r.ok) return [];
   const data = await r.json();
@@ -121,14 +130,17 @@ async function searchOpenLibrary(query) {
 
 export async function GET(req) {
   try {
-    const query = normText(new URL(req.url).searchParams.get("q"));
+    const u = new URL(req.url);
+    const query = normText(u.searchParams.get("q"));
+    const fieldRaw = normText(u.searchParams.get("field")).toLowerCase();
+    const field = fieldRaw === "title" || fieldRaw === "author" ? fieldRaw : "any";
     if (query.length < 2) {
       return NextResponse.json({ items: [] });
     }
 
     const [openResults, googleResults] = await Promise.all([
-      searchOpenLibrary(query),
-      searchGoogle(query),
+      searchOpenLibrary(query, field),
+      searchGoogle(query, field),
     ]);
 
     return NextResponse.json({
