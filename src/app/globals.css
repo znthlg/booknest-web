@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * BookNest (web): aligns with app — indigo primary, sky / violet / emerald reading flow,
+ * rose/amber/sky accents. Surfaces are glass-on-dark; light mode uses cool slate page + white cards.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #e5e9f2;
+  --foreground: #0f172a;
+  --foreground-muted: #334155;
+  --bn-accent: #4f46e5;
+  --bn-accent-muted: #6366f1;
 }
 
 @theme inline {
@@ -16,6 +23,9 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --foreground-muted: #a3a3a3;
+    --bn-accent: #818cf8;
+    --bn-accent-muted: #a5b4fc;
   }
 }
 
@@ -33,6 +43,294 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto,
     Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background: radial-gradient(1000px circle at 18% -8%, rgba(79, 70, 229, 0.085), transparent 52%),
+      radial-gradient(800px circle at 92% 8%, rgba(192, 57, 128, 0.06), transparent 50%),
+      linear-gradient(180deg, #e8ecf4 0%, #e2e8f1 45%, #dde3ee 100%);
+    color: var(--foreground);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: radial-gradient(1200px circle at 20% -10%, rgba(99, 102, 241, 0.16), transparent 55%),
+      radial-gradient(900px circle at 90% 10%, rgba(236, 72, 153, 0.12), transparent 55%),
+      var(--background);
+  }
+}
+
+/**
+ * Light mode: remap “white glass” utilities (meant for dark UI) to opaque cards + slate borders.
+ * Selectors match Tailwind v4 utility class names.
+ */
+@media (prefers-color-scheme: light) {
+  .border-white\/8,
+  .border-white\/10,
+  .border-white\/12,
+  .border-white\/15 {
+    border-color: rgba(51, 65, 85, 0.22) !important;
+  }
+
+  .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(51, 65, 85, 0.14) !important;
+  }
+
+  .bg-white\/5,
+  .bg-white\/10 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .bg-white\/\[0\.03\],
+  .bg-white\/\[0\.04\],
+  .bg-white\/\[0\.05\],
+  .bg-white\/\[0\.06\],
+  .bg-white\/\[0\.07\],
+  .bg-white\/\[0\.08\] {
+    background-color: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  .hover\:border-white\/10:hover,
+  .hover\:border-white\/15:hover,
+  .hover\:border-white\/20:hover {
+    border-color: rgba(51, 65, 85, 0.28) !important;
+  }
+
+  .hover\:bg-white\/5:hover,
+  .hover\:bg-white\/10:hover,
+  .hover\:bg-white\/\[0\.04\]:hover,
+  .hover\:bg-white\/\[0\.07\]:hover,
+  .hover\:bg-white\/\[0\.10\]:hover {
+    background-color: rgba(248, 250, 252, 0.98) !important;
+  }
+
+  /* Muted body copy on cards: was too faint vs white surfaces */
+  .text-foreground\/30 {
+    color: color-mix(in oklab, var(--foreground) 38%, transparent) !important;
+  }
+  .text-foreground\/35 {
+    color: color-mix(in oklab, var(--foreground) 42%, transparent) !important;
+  }
+  .text-foreground\/40 {
+    color: color-mix(in oklab, var(--foreground) 48%, transparent) !important;
+  }
+  .text-foreground\/45 {
+    color: color-mix(in oklab, var(--foreground) 52%, transparent) !important;
+  }
+  .text-foreground\/50 {
+    color: color-mix(in oklab, var(--foreground) 58%, transparent) !important;
+  }
+  .text-foreground\/55 {
+    color: color-mix(in oklab, var(--foreground) 62%, transparent) !important;
+  }
+  .text-foreground\/60 {
+    color: color-mix(in oklab, var(--foreground) 66%, transparent) !important;
+  }
+  .text-foreground\/65 {
+    color: color-mix(in oklab, var(--foreground) 70%, transparent) !important;
+  }
+  .text-foreground\/70,
+  .hover\:text-foreground\/70:hover {
+    color: color-mix(in oklab, var(--foreground) 74%, transparent) !important;
+  }
+  .text-foreground\/75 {
+    color: color-mix(in oklab, var(--foreground) 78%, transparent) !important;
+  }
+  .text-foreground\/80,
+  .hover\:text-foreground\/80:hover {
+    color: color-mix(in oklab, var(--foreground) 82%, transparent) !important;
+  }
+  .text-foreground\/85,
+  .hover\:text-foreground\/85:hover {
+    color: color-mix(in oklab, var(--foreground) 86%, transparent) !important;
+  }
+  .text-foreground\/90 {
+    color: color-mix(in oklab, var(--foreground) 90%, transparent) !important;
+  }
+  .text-foreground\/95 {
+    color: color-mix(in oklab, var(--foreground) 94%, transparent) !important;
+  }
+
+  /* Pastel text-on-tint (dark-theme hues) → readable on white/near-white cards */
+  .text-indigo-50 {
+    color: #312e81 !important;
+  }
+  .text-indigo-100 {
+    color: #3730a3 !important;
+  }
+  .text-indigo-200,
+  .hover\:text-indigo-200:hover,
+  .group-hover\:text-indigo-200:is(:where(.group):hover *) {
+    color: #4338ca !important;
+  }
+  .text-indigo-300 {
+    color: #4f46e5 !important;
+  }
+  .text-indigo-300\/90 {
+    color: rgba(67, 56, 202, 0.92) !important;
+  }
+  .text-indigo-300\/70 {
+    color: rgba(67, 56, 202, 0.78) !important;
+  }
+
+  .text-sky-100 {
+    color: #0c4a6e !important;
+  }
+  .text-sky-200,
+  .text-sky-200\/80 {
+    color: #075985 !important;
+  }
+
+  .text-violet-200 {
+    color: #5b21b6 !important;
+  }
+
+  .text-emerald-300,
+  .text-emerald-300\/90 {
+    color: #047857 !important;
+  }
+
+  .text-amber-100 {
+    color: #78350f !important;
+  }
+  .text-amber-200,
+  .text-amber-200\/80,
+  .text-amber-200\/90,
+  .text-amber-200\/95 {
+    color: #92400e !important;
+  }
+
+  .text-rose-100 {
+    color: #881337 !important;
+  }
+  .text-rose-200,
+  .text-rose-200\/90,
+  .text-rose-200\/85 {
+    color: #9f1239 !important;
+  }
+
+  /* Indigo fills: a touch stronger so chips & nav read as “tinted” on white */
+  .bg-indigo-500\/10 {
+    background-color: rgba(67, 56, 202, 0.11) !important;
+  }
+  .bg-indigo-500\/12 {
+    background-color: rgba(67, 56, 202, 0.13) !important;
+  }
+  .bg-indigo-500\/15,
+  .hover\:bg-indigo-500\/15:hover {
+    background-color: rgba(67, 56, 202, 0.15) !important;
+  }
+  .bg-indigo-500\/25 {
+    background-color: rgba(67, 56, 202, 0.18) !important;
+  }
+  .bg-indigo-500\/35 {
+    background-color: rgba(67, 56, 202, 0.14) !important;
+  }
+  .bg-indigo-500\/\[0\.08\] {
+    background-color: rgba(67, 56, 202, 0.09) !important;
+  }
+
+  .border-indigo-400\/20,
+  .hover\:border-indigo-400\/20:hover {
+    border-color: rgba(67, 56, 202, 0.28) !important;
+  }
+  .border-indigo-400\/25,
+  .hover\:border-indigo-400\/25:hover {
+    border-color: rgba(67, 56, 202, 0.32) !important;
+  }
+  .border-indigo-400\/30 {
+    border-color: rgba(67, 56, 202, 0.35) !important;
+  }
+  .border-indigo-400\/35 {
+    border-color: rgba(67, 56, 202, 0.38) !important;
+  }
+  .border-indigo-400\/40 {
+    border-color: rgba(67, 56, 202, 0.42) !important;
+  }
+  .border-indigo-500\/20 {
+    border-color: rgba(67, 56, 202, 0.3) !important;
+  }
+  .border-indigo-500\/25 {
+    border-color: rgba(67, 56, 202, 0.34) !important;
+  }
+  .border-indigo-500\/30 {
+    border-color: rgba(67, 56, 202, 0.38) !important;
+  }
+
+  .ring-indigo-400\/20 {
+    --tw-ring-color: rgba(67, 56, 202, 0.35) !important;
+  }
+  .ring-indigo-400\/25 {
+    --tw-ring-color: rgba(67, 56, 202, 0.38) !important;
+  }
+  .focus-visible\:ring-indigo-400\/40:focus-visible {
+    --tw-ring-color: rgba(67, 56, 202, 0.45) !important;
+  }
+
+  /* Status chip tints — slightly deeper borders on light */
+  .border-sky-500\/25 {
+    border-color: rgba(14, 165, 233, 0.35) !important;
+  }
+  .border-violet-500\/25 {
+    border-color: rgba(139, 92, 246, 0.35) !important;
+  }
+  .border-emerald-500\/20 {
+    border-color: rgba(16, 185, 129, 0.32) !important;
+  }
+  .border-amber-500\/25 {
+    border-color: rgba(245, 158, 11, 0.35) !important;
+  }
+  .border-rose-500\/20 {
+    border-color: rgba(244, 63, 94, 0.32) !important;
+  }
+  .border-rose-500\/25 {
+    border-color: rgba(244, 63, 94, 0.36) !important;
+  }
+  .bg-rose-500\/10 {
+    background-color: rgba(244, 63, 94, 0.08) !important;
+  }
+  .hover\:bg-rose-500\/15:hover {
+    background-color: rgba(244, 63, 94, 0.12) !important;
+  }
+  .bg-amber-500\/10 {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+  }
+  .hover\:bg-amber-500\/15:hover {
+    background-color: rgba(245, 158, 11, 0.14) !important;
+  }
+
+  .bg-sky-500\/15 {
+    background-color: rgba(14, 165, 233, 0.12) !important;
+  }
+  .bg-violet-500\/15 {
+    background-color: rgba(139, 92, 246, 0.12) !important;
+  }
+  .bg-emerald-500\/15 {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+  }
+  .bg-amber-500\/15 {
+    background-color: rgba(245, 158, 11, 0.12) !important;
+  }
+  .bg-rose-500\/15 {
+    background-color: rgba(244, 63, 94, 0.1) !important;
+  }
+
+  .bg-amber-400\/20 {
+    background-color: rgba(251, 191, 36, 0.22) !important;
+  }
+  .bg-sky-400\/20 {
+    background-color: rgba(56, 189, 248, 0.18) !important;
+  }
+  .bg-rose-400\/20 {
+    background-color: rgba(251, 113, 133, 0.2) !important;
+  }
+
+  /* Book cover frame & similar: readable gradient on light */
+  .bg-gradient-to-b.from-white\/\[0\.08\].to-white\/\[0\.02\] {
+    background-image: linear-gradient(to bottom, #ffffff, #f3f4f8) !important;
+  }
 }
 
 * {

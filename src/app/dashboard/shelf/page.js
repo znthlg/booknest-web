@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
@@ -27,6 +27,28 @@ function sortBooksByTitle(a, b) {
   const t = (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
   if (t !== 0) return t;
   return (a.id || "").localeCompare(b.id || "");
+}
+
+function subscribeToPrefersLight(callback) {
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getPrefersLightSnapshot() {
+  return window.matchMedia("(prefers-color-scheme: light)").matches;
+}
+
+function getPrefersLightServerSnapshot() {
+  return false;
+}
+
+function usePrefersLight() {
+  return useSyncExternalStore(
+    subscribeToPrefersLight,
+    getPrefersLightSnapshot,
+    getPrefersLightServerSnapshot
+  );
 }
 
 function SectionLabel({ children }) {
@@ -119,6 +141,7 @@ function BookCoverThumb({ book, router }) {
 export default function ShelfPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const prefersLight = usePrefersLight();
 
   const [books, setBooks] = useState([]);
   const [categorySettings, setCategorySettings] = useState(null);
@@ -172,8 +195,11 @@ export default function ShelfPage() {
   }, [loading, user]);
 
   const dashboard = useMemo(
-    () => computeShelfDashboard(books, categorySettings),
-    [books, categorySettings]
+    () =>
+      computeShelfDashboard(books, categorySettings, {
+        colorScheme: prefersLight ? "light" : "dark",
+      }),
+    [books, categorySettings, prefersLight]
   );
 
   const donutGradient = useMemo(

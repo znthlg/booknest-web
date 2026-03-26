@@ -2,6 +2,19 @@ import { normalizeReadingStatus } from "@/lib/readingStatus";
 
 /** @typedef {{ status: string, count: number, percentage: number, color: string, label: string }} ReadingSlice */
 
+/** Donut / legend: bright pastels on dark; deeper hues for contrast on light cards */
+const READING_SLICE_COLORS_DARK = {
+  toRead: "rgb(56, 189, 248)",
+  reading: "rgb(167, 139, 250)",
+  read: "rgb(52, 211, 153)",
+};
+
+const READING_SLICE_COLORS_LIGHT = {
+  toRead: "rgb(2, 132, 199)",
+  reading: "rgb(109, 40, 217)",
+  read: "rgb(4, 120, 87)",
+};
+
 /**
  * Buckets for the shelf donut (iOS uses To Read / Reading / Read).
  * Web "Finished" maps to read; other statuses roll into to-read queue.
@@ -40,9 +53,13 @@ function displayGenre(g) {
 /**
  * @param {object[]} books
  * @param {{ mainCategories?: object[] } | null | undefined} categorySettings
+ * @param {{ colorScheme?: 'light' | 'dark' }} [options]
  */
-export function computeShelfDashboard(books, categorySettings) {
+export function computeShelfDashboard(books, categorySettings, options = {}) {
   const list = Array.isArray(books) ? books : [];
+  const colorScheme = options.colorScheme === "light" ? "light" : "dark";
+  const sliceColors =
+    colorScheme === "light" ? READING_SLICE_COLORS_LIGHT : READING_SLICE_COLORS_DARK;
   const totalBooks = list.length;
 
   const authorCounts = new Map();
@@ -84,7 +101,7 @@ export function computeShelfDashboard(books, categorySettings) {
       label: "To read",
       count: toReadN,
       percentage: pct(toReadN, chartDenom),
-      color: "rgb(56, 189, 248)",
+      color: sliceColors.toRead,
     },
     {
       key: "reading",
@@ -92,7 +109,7 @@ export function computeShelfDashboard(books, categorySettings) {
       label: "Reading",
       count: readingN,
       percentage: pct(readingN, chartDenom),
-      color: "rgb(167, 139, 250)",
+      color: sliceColors.reading,
     },
     {
       key: "read",
@@ -100,7 +117,7 @@ export function computeShelfDashboard(books, categorySettings) {
       label: "Finished",
       count: readN,
       percentage: pct(readN, chartDenom),
-      color: "rgb(52, 211, 153)",
+      color: sliceColors.read,
     },
   ];
 
